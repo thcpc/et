@@ -142,6 +142,10 @@ class TaskBase(Base):
     prev_id = Column(Integer, default=-1)
     next_id = Column(Integer, default=-1)
 
+    @classmethod
+    def task(cls, session, **kwargs):
+        return cls._fetch(session, **kwargs)
+
 
 class TaskAssigneeBase(Base):
     __tablename__ = 'et_task_assignees'
@@ -149,6 +153,10 @@ class TaskAssigneeBase(Base):
     task_id = Column(Integer, ForeignKey('et_tasks.id'))
     user_id = Column(Integer)
     name = Column(String(100), nullable=False)
+
+    @classmethod
+    def task_assignee(cls, session, **kwargs):
+        return cls._fetch(session, **kwargs)
 
 
 class DocumentAuditBase(Base):

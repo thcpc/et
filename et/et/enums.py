@@ -35,13 +35,15 @@ class Status:
     class __Business_:
         @property
         def Pass(self): return 101
+
         @property
         def Fail(self): return 102
+
         @property
         def Block(self): return 103
+
         @property
         def Ignore(self): return 104
-
 
     Document = __Document_()
     Task = __Task_()
@@ -76,5 +78,16 @@ class Name:
         @property
         def ExecuteRegressionTask(self): return 3
 
+    class __Dispatcher_:
+        @property
+        def New(self): return "new"
+
+        @property
+        def Transfer(self): return "transfer"
+
+        @property
+        def Rollback(self): return "roll_back"
+
     DocumentType = __DocumentType_()
     TaskType = __TaskType_()
+    Dispatcher = __Dispatcher_()

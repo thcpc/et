@@ -1,8 +1,10 @@
-from collections import namedtuple
+import abc
+
 from copy import deepcopy
 from math import ceil
 
 from celery import shared_task
+from requests import session
 
 from sqlalchemy import and_
 
@@ -13,42 +15,76 @@ from et import enums
 from et.enums import Status
 from et.models import UserBase
 from et.settings import DB, REDIS
-from libs.utils import TaskClassFactory
-
+from libs.utils import TaskGeneratorFactory
+from taskdispatcher.core.task_definition.task_define import TaskDefine
+from taskdispatcher.core.task_definition.taskgenerator import TaskGenerator
 from taskdispatcher.models import Document, Task, TaskAssignee, SnapshotDocument
-from taskdispatcher.core.task_definition.task import Task as TaskDefine
+
+
+class Dispatcher(abc.ABC):
+    def __init__(self, task_define: dict):
+        self.task_define = TaskDefine(**task_define)
+
+    def execute(self):
+        with DB.session(autoflush=False, autobegin=False) as session:
+            _session: Session = session
+            with _session.begin() as transaction:
+                _task_generator = TaskGeneratorFactory(session=_session, task_define=self.task_define)
+                if _task_generator.match():
+                    _new_task = _task_generator.new_task()
+                    self.update_cache_count()
+
+    @abc.abstractmethod
+    def update_cache_count(self): ...
+
+
+class NewDispatcher(Dispatcher):
+    @classmethod
+    def name(cls): return enums.Name.Dispatcher.New
+
+    def update_cache_count(self):
+        REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=self.task_define.new_assign_user_id)
+
+
+class TransferDispatcher(Dispatcher):
+    @classmethod
+    def name(cls): return enums.Name.Dispatcher.Transfer
+
+    def update_cache_count(self):
+        REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=self.task_define.new_assign_user_id)
+        REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=self.task_define.old_assign_user_id, number=-1)
+
+
+class RollBackDispatcher(Dispatcher):
+    @classmethod
+    def name(cls): return enums.Name.Dispatcher.Rollback
+
+    def update_cache_count(self):
+        REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=self.task_define.new_assign_user_id)
+        REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=self.task_define.old_assign_user_id, number=-1)
+
+    def execute(self):
+        with DB.session(autoflush=False, autobegin=False) as session:
+            _session: Session = session
+            with _session.begin() as transaction:
+                _task = Task.task(session=session, id=self.task_define.current_task_id)
+                if _task.prev_id != Status.TaskNode.Start:
+                    _back_task = Task.task(session=session, id=_task.prev_id)
+                    _back_task.status = Status.Task.Todo
+                    _back_task.comment = self.task_define.comment
+                    TaskAssignee.task_assignee(session, task_id=_task.id).is_delete = True
+                    _task.is_delete = True
+                    self.update_cache_count()
 
 
 @shared_task
-def dispatcher(task_data: dict):
+def dispatcher(operate: dict):
     with DB.session(autoflush=False, autobegin=False) as session:
         _session: Session = session
         with _session.begin() as transaction:
-
-            task = TaskClassFactory(task_type=task_data.get("spec"), data=task_data)
-            # _document = _session.query(Document).filter_by(id=task.document_id()).first()
-            _document = Document.doc(_session, id=task.document_id())
-            _snapshot = _document.snapshots[-1]
-            _create_by = UserBase.user(_session, name="System").id if not task.create_by() else task.create_by()
-            if task.match(_document):
-                _new_task = Task(task_type=task.task_type(),
-                                 status=enums.Status.Task.Todo,
-                                 snapshot_id=_snapshot.id,
-                                 description=task.shortcut_language,
-                                 comment=task_data.get("comment", ""),
-                                 create_by=_create_by)
-                if task_data.get("from_id"):
-                    _new_task.prev_id = task_data.get("from_id")
-                _user = UserBase.user(_session, id=task.assignee_user_id())
-                _assignee = TaskAssignee(user_id=task.assignee_user_id(), name=_user.name)
-                _new_task.assignee = _assignee
-                _document.tasks.append(_new_task)
-                _session.flush()
-                if task_data.get("from_id"):
-                    _prev = _session.query(Task).filter_by(id=task_data.get("from_id")).first()
-                    _prev.next_id = _new_task.id
-                    _session.flush()
-                REDIS.increment_page_total(type_=REDIS.Key.DocTabTask, user_id=task.assignee_user_id())
+            for Dispatcher_ in [NewDispatcher, TransferDispatcher, RollBackDispatcher]:
+                if Dispatcher_.name() == operate.get("op"):
+                    Dispatcher_(task_define=operate.get("task_define")).execute()
 
 
 def get_tasks(user_id, page_no=1, per_count=20):
@@ -69,7 +105,7 @@ def get_tasks(user_id, page_no=1, per_count=20):
             and_(
                 Task.status != enums.Status.Task.Finished,
                 Task.status != enums.Status.Task.TransferToOther,
-                   TaskAssignee.user_id == user_id,
+                TaskAssignee.user_id == user_id,
                 Task.document_id == Document.id,
                 Document.is_delete == False)
         ).join(TaskAssignee,
@@ -108,17 +144,18 @@ def re_assign(task_id, old_assignee_id, new_assignee_user_id, comment):
     with DB.session(autoflush=True, autobegin=True) as session:
         _session: Session = session
         with _session.begin() as transaction:
-            _old_task = _session.query(Task).filter_by(id=task_id).first()
-            _user = _session.query(UserBase).filter_by(id=new_assignee_user_id).first()
-
-            task_spec = TaskDefine.common_spec(document_id=_old_task.document_id,
-                                               create_user_id=old_assignee_id,
-                                               assign_user_id=new_assignee_user_id,
-                                               current_task_id=_old_task.id)
-            task_spec["spec"] = _old_task.task_type
-            task_spec["comment"] = comment
+            _old_task = Task.task(session, id=task_id)
+            _user = UserBase.user(session, id=new_assignee_user_id)
+            task_define = TaskGenerator.definition(TaskDefine(document_id=_old_task.document_id,
+                                                              create_user_id=old_assignee_id,
+                                                              old_assign_user_id=_old_task.assignee.id,
+                                                              new_assign_user_id=new_assignee_user_id,
+                                                              current_task_id=_old_task.id,
+                                                              comment=comment,
+                                                              task_type=_old_task.task_type))
             _old_task.status = enums.Status.Task.TransferToOther
-            dispatcher(task_spec)
+            dispatcher_operate = dict(op=enums.Name.Dispatcher.Transfer, task_define=task_define)
+            dispatcher(dispatcher_operate)
     return {}
 
 
@@ -136,10 +173,12 @@ def roll_back(task_id, comment):
     with DB.session(autoflush=True, autobegin=True) as session:
         _session: Session = session
         with _session.begin() as transaction:
-            _task = _session.query(Task).filter_by(id=task_id).first()
-            if _task.prev_id != Status.TaskNode.Start:
-                _back_task = _session.query(Task).filter_by(id=_task.prev_id).first()
-                _back_task.status = Status.Task.Todo
-                _back_task.comment = comment
-                _session.query(TaskAssignee).filter_by(task_id=_task.id).first().is_delete = True
-                _task.is_delete = True
+            task_define = TaskGenerator.definition(TaskDefine(document_id=None,
+                                                              create_user_id=None,
+                                                              old_assign_user_id=None,
+                                                              new_assign_user_id=None,
+                                                              current_task_id=task_id,
+                                                              comment=comment,
+                                                              task_type=None))
+            dispatcher_operate = dict(op=enums.Name.Dispatcher.Rollback, task_define=task_define)
+            dispatcher(dispatcher_operate)

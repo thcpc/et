@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 from et import settings, enums
 from et.models import UserFingerPrintBase, UserBase
 from et.settings import REDIS, USER_TIMEOUT, DB
-from taskdispatcher.core.task_definition.assign_auto_task import AssignAutoTask
-from taskdispatcher.core.task_definition.execute_auto_task import ExecuteAutoTask
-from taskdispatcher.core.task_definition.execute_regression_task import ExecuteRegressionTask
-from taskdispatcher.core.task_definition.link_auto_task import LinkAutoTask
+from taskdispatcher.core.task_definition.assign_auto_task_generator import AssignAutoTaskGenerator
+from taskdispatcher.core.task_definition.execute_auto_task_generator import ExecuteAutoTaskGenerator
+from taskdispatcher.core.task_definition.execute_regression_task_generator import ExecuteRegressionTaskGenerator
+from taskdispatcher.core.task_definition.link_auto_task_generator import LinkAutoTaskGenerator
 
 
 def get_header_token(request):
@@ -90,9 +90,13 @@ def refresh_token_if_active(old_token, user_id, username):
     # token.save()
 
 
-def TaskClassFactory(task_type: int, data):
-    return {enums.Name.TaskType.AssignAutoTask: AssignAutoTask,
-            enums.Name.TaskType.ExecuteAutoTask: ExecuteAutoTask,
-            enums.Name.TaskType.LinkAutoTask: LinkAutoTask,
-            enums.Name.TaskType.ExecuteRegressionTask: ExecuteRegressionTask,
-            }.get(int(task_type))(data)
+def TaskGeneratorFactory(session, task_define):
+    return TaskGeneratorClass(task_define.task_type)(session, task_define)
+
+
+def TaskGeneratorClass(task_type: int):
+    return {enums.Name.TaskType.AssignAutoTaskGenerator: AssignAutoTaskGenerator,
+            enums.Name.TaskType.ExecuteAutoTaskGenerator: ExecuteAutoTaskGenerator,
+            enums.Name.TaskType.LinkAutoTask: LinkAutoTaskGenerator,
+            enums.Name.TaskType.ExecuteRegressionTaskGenerator: ExecuteRegressionTaskGenerator,
+            }.get(int(task_type))
