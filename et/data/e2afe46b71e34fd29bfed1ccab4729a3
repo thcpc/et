@@ -1,0 +1,1 @@
+<p>给表单的dependence层级设置一个规则</p><p><br></p><p>目前生产环境使用规则的study：RMC-9805-001</p><p><br></p><p>```</p><p>mustAnswer($Screening.Subject Enrollment.DSPART)&amp;&amp;getContainStrNum(lowercase($Screening.Subject Enrollment.DSPART), 'part 1') &gt; 0</p>

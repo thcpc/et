@@ -1,0 +1,36 @@
+{
+  "name": "etui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "@lezer/highlight": "^1.2.1",
+    "@toast-ui/editor": "^3.2.2",
+    "axios": "^1.7.9",
+    "codemirror": "^6.0.1",
+    "fingerprintjs2": "^2.1.4",
+    "font-awesome": "^4.7.0",
+    "pinia": "^2.3.1",
+    "plantuml-encoder": "^1.4.0",
+    "vue": "^3.5.13",
+    "vue-cli-plugin-component": "^1.12.2",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/eslint-config-prettier": "^10.1.0",
+    "eslint": "^9.18.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "prettier": "^3.4.2",
+    "vite": "^6.0.11",
+    "vite-plugin-vue-devtools": "^7.7.1"
+  }
+}

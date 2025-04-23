@@ -1,0 +1,27 @@
+@startjson
+#highlight "items" /"JSON_OBJECT item"/"isPopulated"
+{"items": { "JSON_OBJECT item":
+{
+  "id": 22963320,
+  "subjectVersionId": 2880,
+  "crfItemId": 8495,
+  "subjectIgId": 2112989,
+  "creatorDt": "2024-04-08 05:45:37",
+  "modifyDt": "2024-04-08 05:45:37",
+  "creatorUid": "system",
+  "modifyUid": "system",
+  "preId": null,
+  "questionId": 5991,
+  "uid": "610458a7-97cb-4dc9-832c-18b4281f0e6b",
+  "disabled": false,
+  "closeRequired": null,
+  "isPopulated": true,
+  "crfIgId": 931,
+  "odmItemId": 2300,
+  "multiSelectChange": false,
+  "itemRecordChangeFlag": false,
+  "relateIds": null,
+  "ecoaRefItemDto": null,
+  "timezoneFromIWRS": null
+}}}
+@endjson

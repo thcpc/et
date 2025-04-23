@@ -1,0 +1,15 @@
+/*@import './base.css';*/
+
+/*@import "./bootstrap/bootstrap.min.css";*/
+@import './tabler/css/tabler.min.css';
+@import './tabler/css/tabler-flags.min.css';
+@import './tabler/css/tabler-payments.min.css';
+@import './tabler/css/tabler-vendors.min.css';
+@import './tabler/css/demo.min.css';
+/*@import './summernote/summernote-bs5.min.css';*/
+@import './summernote/summernote-lite.min.css';
+
+.ts-dropdown .active {
+    background-color: #d9d9d9;
+    color: inherit;
+}
