@@ -9,15 +9,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from document import service
+from et import enums
 from taskdispatcher import service as task_center
 # from et import settings
 from libs.http_handle import JsonRequest
 from libs.mocks import Mock
 from libs.utils import get_header_token, decode_jwt
-
-
-from taskdispatcher.core.task_definition.assign_auto_task import AssignAutoTask
-from taskdispatcher.core.task_definition.execute_regression_task import ExecuteRegressionTask
+from taskdispatcher.core.task_definition.task_define import TaskDefine
+from taskdispatcher.core.task_definition.taskgenerator import TaskGenerator
 
 
 # Create your views here.
@@ -139,9 +138,13 @@ def new_snapshot(request):
     #     AssignAutoTask.spec(document_id=_doc_id, create_user_id=_user_id, assign_user_id=_user_id,
     #                         current_task_id=None))
     task_center.dispatcher(
-        AssignAutoTask.spec(document_id=_doc_id,
-                            create_user_id=None, assign_user_id=_user_id,
-                            current_task_id=None))
+        TaskGenerator.definition(TaskDefine(document_id=_doc_id,
+                                            create_user_id=None,
+                                            old_assign_user_id=None,
+                                            new_assign_user_id=_user_id,
+                                            current_task_id=None,
+                                            comment=None,
+                                            task_type=enums.Name.TaskType.AssignAutoTaskGenerator)))
     # task_center.dispatcher.delay(RegressionTask.spec(document_id=_doc_id, user_id=_user_id))
     # task_center.dispatcher(AutoTask.spec(document_id=_doc_id, user_id=_user_id))
     # task_center.dispatcher(RegressionTask.spec(document_id=_doc_id, user_id=_user_id))

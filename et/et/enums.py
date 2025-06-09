@@ -67,16 +67,16 @@ class Name:
 
     class __TaskType_:
         @property
-        def AssignAutoTask(self): return 0
+        def AssignAutoTaskGenerator(self): return 0
 
         @property
-        def LinkAutoTask(self): return 1
+        def LinkAutoTaskGenerator(self): return 1
 
         @property
-        def ExecuteAutoTask(self): return 2
+        def ExecuteAutoTaskGenerator(self): return 2
 
         @property
-        def ExecuteRegressionTask(self): return 3
+        def ExecuteRegressionTaskGenerator(self): return 3
 
     class __Dispatcher_:
         @property

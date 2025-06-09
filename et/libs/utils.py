@@ -54,7 +54,7 @@ def encode_jwt(user_id, username) -> str:
 
 
 def get_user_id(token):
-    return decode_jwt(token)["user_id"]
+    return decode_jwt(token, verify=False)["user_id"]
 
 
 def decode_jwt(token, verify=True) -> dict:
@@ -97,6 +97,6 @@ def TaskGeneratorFactory(session, task_define):
 def TaskGeneratorClass(task_type: int):
     return {enums.Name.TaskType.AssignAutoTaskGenerator: AssignAutoTaskGenerator,
             enums.Name.TaskType.ExecuteAutoTaskGenerator: ExecuteAutoTaskGenerator,
-            enums.Name.TaskType.LinkAutoTask: LinkAutoTaskGenerator,
+            enums.Name.TaskType.LinkAutoTaskGenerator: LinkAutoTaskGenerator,
             enums.Name.TaskType.ExecuteRegressionTaskGenerator: ExecuteRegressionTaskGenerator,
             }.get(int(task_type))

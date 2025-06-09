@@ -2,11 +2,11 @@ import abc
 
 from sqlalchemy.orm import Session
 
-from document.models import Document
+
 from et import enums
 from et.models import UserBase
 from taskdispatcher.core.task_definition.task_define import TaskDefine
-from taskdispatcher.models import Task, TaskAssignee
+from taskdispatcher.models import Task, TaskAssignee,Document
 
 
 class TaskGenerator(abc.ABC):
@@ -63,21 +63,17 @@ class TaskGenerator(abc.ABC):
     def dispatcher(self, document, assignee):
         ...
 
-    @classmethod
-    def name(cls):
-        return ""
+
 
     @classmethod
     def definition(cls, task_define: TaskDefine) -> dict:
-        _define = {
+        return {
             "document_id": task_define.document_id,
             "new_assign_user_id": task_define.new_assign_user_id,
             "create_user_id": task_define.create_user_id,
-            "comment": task_define.comment
+            "comment": task_define.comment,
+            "current_task_id": task_define.current_task_id,
+            "old_assign_user_id": task_define.old_assign_user_id,
+            "task_type": task_define.task_type
         }
-        if task_define.current_task_id:
-            _define["current_task_id"] = task_define.current_task_id
-        if task_define.old_assign_user_id:
-            _define["old_assign_user_id"] = task_define.old_assign_user_id
-        _define["task_name"] = cls.name()
-        return _define
+

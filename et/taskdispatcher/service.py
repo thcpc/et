@@ -77,7 +77,7 @@ class RollBackDispatcher(Dispatcher):
                     self.update_cache_count()
 
 
-@shared_task
+# @shared_task
 def dispatcher(operate: dict):
     with DB.session(autoflush=False, autobegin=False) as session:
         _session: Session = session
@@ -88,10 +88,11 @@ def dispatcher(operate: dict):
 
 
 def get_tasks(user_id, page_no=1, per_count=20):
-    with (DB.session(autoflush=True, autobegin=True) as session):
+     with (DB.session(autoflush=True, autobegin=True) as session):
         _session: Session = session
         _total_tasks = REDIS.get_page_total(type_=REDIS.Key.DocTabTask, user_id=user_id)
         if _total_tasks is None:
+
             _total_tasks = _session.query(Task, TaskAssignee).join(TaskAssignee,
                                                                    and_(TaskAssignee.user_id == user_id,
                                                                         TaskAssignee.task_id == Task.id,
@@ -105,12 +106,12 @@ def get_tasks(user_id, page_no=1, per_count=20):
             and_(
                 Task.status != enums.Status.Task.Finished,
                 Task.status != enums.Status.Task.TransferToOther,
-                TaskAssignee.user_id == user_id,
                 Task.document_id == Document.id,
                 Document.is_delete == False)
         ).join(TaskAssignee,
                and_(
                    TaskAssignee.task_id == Task.id,
+                   TaskAssignee.user_id == user_id,
                    TaskAssignee.is_delete == False)).join(
             SnapshotDocument, and_(Task.snapshot_id == SnapshotDocument.id)).limit(
             per_count).offset(
