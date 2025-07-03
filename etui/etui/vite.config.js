@@ -16,6 +16,7 @@ export default defineConfig({
       '@codemirror/state': path.resolve(__dirname, 'node_modules/@codemirror/state'),
       '@codemirror/view': path.resolve(__dirname, 'node_modules/@codemirror/view'),
       '@codemirror/language': path.resolve(__dirname, 'node_modules/@codemirror/language'),
+      'jquery': path.resolve(__dirname, 'src/assets/summernote/jquery-3.4.1.slim.min.js')
     },
   },
   build: {

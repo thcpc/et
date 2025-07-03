@@ -1,3 +1,13 @@
+import "./assets/draggable/draggable.bundle.js"
+import "./assets/tabler/js/demo-theme.min.js"
+import "./assets/tabler/js/tom-select.base.min.js"
+import "./assets/tabler/js/nouislider.min.js"
+import "./assets/tabler/js/litepicker.js"
+import "./assets/tabler/js/tabler.min.js"
+import "./assets/tabler/js/demo.min.js"
+import "./assets/summernote/jquery-3.4.1.slim.min.js"
+import "./assets/summernote/summernote-lite.min.js"
+
 import './assets/main.css'
 // import 'codemirror/lib/codemirror.css';
 // import 'codemirror/mode/javascript/javascript';

@@ -1,10 +1,10 @@
 import axios from 'axios'
 import {userAuthStore} from "@/stores/tokenManager.js";
-import { createPinia } from 'pinia';
 import eventBus from "@/core/eventBus.js";
 import {ErrCode} from "@/core/enums.js";
 
-const dev = 'http://127.0.0.1:8080'
+// const dev = 'http://127.0.0.1:8080'
+const dev = import.meta.env.VITE_API_BASE_URL
 const root = dev
 axios.interceptors.request.use(
   (config) => {
