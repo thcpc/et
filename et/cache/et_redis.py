@@ -14,12 +14,18 @@ class EtRedis:
         DocTabAll = "all"
         DocTabTask = "task"
 
-    def __init__(self):
+    def __init__(self, setting: dict):
+        # self.pool = redis.ConnectionPool(
+        #     host='automation-01.chengdudev.edetekapps.cn',
+        #     port=9999,
+        #     db=3,
+        #     max_connections=10
+        # )
         self.pool = redis.ConnectionPool(
-            host='127.0.0.1',
-            port=6379,
-            db=3,
-            max_connections=10
+            host=setting.get("REDIS_HOST"),
+            port=setting.get("REDIS_PORT"),
+            db=setting.get("REDIS_DB"),
+            max_connections=setting.get("REDIS_MAX_CONNECTIONS")
         )
 
     @contextlib.contextmanager
@@ -76,8 +82,4 @@ class EtRedis:
             _active = _r.get(f"{self.Key.TokenUser}:{user_id}:last_active")
             _active = int(float(_r.get(f"{self.Key.TokenUser}:{user_id}:last_active").decode())) if _active else 0
             return _active
-#
-# if __name__ == "__main__":
-#     r = EtRedis()
-#     r.init_cache("et_dev")
-#     print(r.get_page_total("et_dev"))
+

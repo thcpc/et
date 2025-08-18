@@ -20,11 +20,11 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('document/', include('document.urls')),
-    path('label/', include('label.urls')),
-    path('user/', include('user.urls')),
-    path('task/', include('taskdispatcher.urls'))
+    # path('admin/', admin.site.urls),
+    path('document/', include('et_document.urls')),
+    # path('label/', include('label.urls')),
+    path('user/', include('et_admin.urls')),
+    # path('task/', include('taskdispatcher.urls'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

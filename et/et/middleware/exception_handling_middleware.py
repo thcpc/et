@@ -1,13 +1,13 @@
 # middleware/exception_handler.py
-import sqlalchemy
+import sentry_sdk
 from django.http import JsonResponse
 
 from et.exceptions.business_error import BusinessError
 
 
-# import logging
-#
-# logger = logging.getLogger(__name__)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ExceptionHandlingMiddleware:
@@ -27,6 +27,12 @@ class ExceptionHandlingMiddleware:
             exception.exception_invoke()
             return JsonResponse(exception.body())
 
+        logger.critical(
+            f"SYSTEM ERROR: {exception}",
+            exc_info=True,
+            extra={'request': request}
+        )
+        sentry_sdk.capture_exception(exception)
         # 默认错误响应
         return JsonResponse({
             'status': 'error',

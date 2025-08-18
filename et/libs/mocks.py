@@ -1,5 +1,4 @@
 
-from tkinter.font import names
 
 
 class Mock:

@@ -11,11 +11,31 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+import environ
+from sentry_sdk.integrations.django import DjangoIntegration
 
 from alchemy.db20 import Db
 from alchemy.enums.dialects import Dialects
 from cache.et_redis import EtRedis
+import sentry_sdk
 
+# SECURITY WARNING: don't run with debug turned on in production!
+
+env = environ.Env()
+env.read_env()
+
+DEBUG = env.bool("DEBUG")
+
+if not DEBUG:
+    sentry_sdk.init(
+        # dsn="http://9e7448173924abce3d39403b15a469a8@automation-01.chengdudev.edetekapps.cn:9000/2",
+        dsn=env.str("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        debug=env.bool("DEBUG")
+    )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,12 +44,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3ia4l-%ej+vp$-a3&p#l5cfinj^8g_u1g)icpjat1z(pct6qq5'
+# SECRET_KEY = 'django-insecure-3ia4l-%ej+vp$-a3&p#l5cfinj^8g_u1g)icpjat1z(pct6qq5'
+SECRET_KEY = env.str("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+# ALLOWED_HOSTS = [
+#     'etbackend',          # Docker 内部主机名
+#     'localhost',          # 本地开发
+#     '127.0.0.1',          # 本地 IP
+#     'automation-01.chengdudev.edetekapps.cn',  # 你的实际域名
+# ]
 
 # Application definition
 
@@ -40,14 +64,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'document',
-    'label',
-    'user',
-    'taskdispatcher',
+    'et_document',
+    'et_admin',
     'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,8 +78,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'et.middleware.token_auth_middleware.TokenAuthMiddleware',
+    'et.middleware.crsf_middleware.CSRFMiddleware',
     'et.middleware.exception_handling_middleware.ExceptionHandlingMiddleware'
 ]
 
@@ -89,11 +112,13 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     },
     'dev': {
-        'NAME': 'et_dev',
-        'USER': 'root',
-        'PASSWORD': '123456',
-        'HOST': 'automation-01.chengdudev.edetekapps.cn',
-        'PORT': '3306',
+        'NAME': env.str("DATABASE_NAME"),
+        'USER': env.str("DATABASE_USER"),
+        'PASSWORD': env.str("DATABASE_PASSWORD"),
+        'HOST': env.str("DATABASE_HOST"),
+        # 'HOST': 'host.docker.internal',
+        # 'HOST': "172.17.0.1", # 宿主机网关地址，Docker 默认网关
+        'PORT': env.str("DATABASE_PORT"),
     }
 }
 
@@ -140,31 +165,125 @@ DATA_URL = BASE_DIR.joinpath("data")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# 允许所有域名跨域访问（开发环境）
-CORS_ALLOW_ALL_ORIGINS = True
-
+CORS_ALLOW_CREDENTIALS = True
+# # 允许所有域名跨域访问（开发环境）
+# CORS_ALLOW_ALL_ORIGINS = True
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_PATH = '/'
 # 或者指定允许的域名（生产环境）
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vue 前端地址
-    "http://127.0.0.1:5173",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",  # Vue 前端地址
+#     "http://127.0.0.1:5173",
+#     "http://127.0.0.1:8080",
+#     "http://etbackend:8000", # Docker Upstream定义的Server名
+#     "http://automation-01.chengdudev.edetekapps.cn", # 实际域名
+# ]
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
+# CSRF_TRUSTED_ORIGINS = [
+#     'http://localhost:5173',
+#     "http://127.0.0.1:5173",
+#     "http://automation-01.chengdudev.edetekapps.cn"# 允许 Vue 前端地址
+# ]
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
-USER_TIMEOUT = 60 * 60 # 用户超时时间 秒
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost:5173',
+#     "http://127.0.0.1:5173",
+#     "http://automation-01.chengdudev.edetekapps.cn"#替换成自己的前端url
+#
+# ]
+CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST")
+# CORS_ALLOW_HEADERS = [
+#     'content-type',
+#     'x-csrftoken',
+#     'authorization',
+#     'X-CSRFToken'
+#     # 允许前端发送 CSRF Token
+# ]
+CORS_ALLOW_HEADERS = env.list("CORS_ALLOW_HEADERS")
+
+# CORS_ALLOWED_METHODS = ['DELETE',
+#     'GET',
+#     'OPTIONS',
+#     'PATCH',
+#     'POST',
+#     'PUT',
+#     'VIEW']
+CORS_ALLOWED_METHODS = env.list("CORS_ALLOWED_METHODS")
+
+USER_TIMEOUT = 60 * 60  # 用户超时时间 秒
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + str(BASE_DIR / 'alchemy.db')
 
 DB = Db(dialect=Dialects.MysqlClient, settings=DATABASES["dev"])
-REDIS = EtRedis()
-
-
+CACHE_SETTING = {
+    "Redis": {
+        "REDIS_HOST": env.str("REDIS_HOST"),
+        "REDIS_PORT": env.int("REDIS_PORT"),
+        "REDIS_DB": env.int("REDIS_DB"),
+        "REDIS_MAX_CONNECTIONS": env.int("REDIS_MAX_CONNECTIONS"),
+        "NAME": env.str("REDIS_NAME")
+    }
+}
+REDIS = EtRedis(CACHE_SETTING.get("Redis"))
 
 # Celery 配置
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # 使用 Redis 作为消息队列
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_BROKER_URL = 'redis://automation-01.chengdudev.edetekapps.cn:9999/0'  # 使用 Redis 作为消息队列
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")  # 使用 Redis 作为消息队列
+# CELERY_RESULT_BACKEND = 'redis://automation-01.chengdudev.edetekapps.cn:9999/1'
+CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND")
+# CELERY_ACCEPT_CONTENT = ['json']
+CELERY_ACCEPT_CONTENT = env.list("CELERY_ACCEPT_CONTENT")
+# CELERY_TASK_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = env.str("CELERY_TASK_SERIALIZER")
+# CELERY_RESULT_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = env.str("CELERY_RESULT_SERIALIZER")
 
+# 日志配置
+
+# LOG_DIR = Path('/var/log/django')
+# os.makedirs(LOG_DIR, exist_ok=True)
+#
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {message}',
+#             'style': '{',
+#         },
+#         'simple': {
+#             'format': '{levelname} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'err_file': {
+#             'level': 'ERROR',  # 记录 ERROR 及以上级别的日志
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             # 'filename': '/var/log/django/error.log',  # 日志文件路径
+#             'filename': LOG_DIR.joinpath('error.log'),
+#             'formatter': 'verbose',
+#         },
+#         'console': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple',
+#         },
+#     },
+#     'loggers': {
+#         # 捕获所有未处理的异常
+#         '': {
+#             'handlers': ['err_file'],
+#             'level': 'ERROR',
+#             'propagate': False
+#         },
+#         'django': {
+#             'handlers': ['err_file', 'console'],
+#             'level': 'INFO',
+#             'propagate': False
+#         },
+#     },
+# }

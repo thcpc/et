@@ -10,7 +10,7 @@ from et.exceptions.business_error import InValidUserInfoError
 class DocumentBase(Base):
     Draft = 0
 
-    __tablename__ = 'et_documents'
+    __tablename__ = 'et_document_docs'
     id = Column(Integer, primary_key=True)
     name = Column(String(1000))
     author = Column(String(50))
@@ -21,86 +21,86 @@ class DocumentBase(Base):
         return cls._fetch(session, **kwargs)
 
 class PageBase(Base):
-    __tablename__ = 'et_pages'
+    __tablename__ = 'et_document_pages'
     id = Column(Integer, primary_key=True)
     name = Column(String(1000))
     order = Column(Integer)
-    document_id = Column(Integer, ForeignKey('et_documents.id'))
+    document_id = Column(Integer, ForeignKey('et_document_docs.id'))
 
 
 class ParagraphBase(Base):
-    __tablename__ = 'et_paragraphs'
+    __tablename__ = 'et_document_paragraphs'
     id = Column(Integer, primary_key=True)
     order = Column(Integer)
     paragraph_type = Column(String(15))
-    page_id = Column(Integer, ForeignKey('et_pages.id'))
+    page_id = Column(Integer, ForeignKey('et_document_pages.id'))
     blockno = Column(String(50))
     fileno = Column(String(50))
 
 
 class HisContentBase(Base):
-    __tablename__ = 'et_his_contents'
+    __tablename__ = 'et_document_his_contents'
     id = Column(Integer, primary_key=True)
     blockno = Column(String(50))
     fileno = Column(String(50))
-    paragraph_id = Column(Integer, ForeignKey('et_paragraphs.id'))
+    paragraph_id = Column(Integer, ForeignKey('et_document_paragraphs.id'))
 
 
 class LabelCategoryBase(Base):
-    __tablename__ = 'et_label_categories'
+    __tablename__ = 'et_document_label_categories'
     id = Column(Integer, primary_key=True)
     name = Column(String(20))
     category_type = Column(String(10))
 
 
 class LabelBae(Base):
-    __tablename__ = 'et_labels'
+    __tablename__ = 'et_document_labels'
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    category_id = Column(Integer, ForeignKey('et_label_categories.id'))
+    category_id = Column(Integer, ForeignKey('et_document_label_categories.id'))
 
 
 class LabelOn(Base):
-    __tablename__ = 'et_label_on'
+    __tablename__ = 'et_document_label_on'
     id = Column(Integer, primary_key=True)
     on = Column(String(30))
     on_id = Column(Integer)
 
 
 class DocumentLabelBase(Base):
-    __tablename__ = 'et_document_labels'
+    __tablename__ = 'et_document_doc_labels'
     id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey('et_documents.id'))
-    label_id = Column(Integer, ForeignKey('et_labels.id'))
+    document_id = Column(Integer, ForeignKey('et_document_docs.id'))
+    label_id = Column(Integer, ForeignKey('et_document_labels.id'))
 
 
 class SnapshotDocumentBase(Base):
-    __tablename__ = 'et_snapshot_documents'
+    __tablename__ = 'et_document_snapshot_docs'
     id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey('et_documents.id'))
+    document_id = Column(Integer, ForeignKey('et_document_docs.id'))
     labels = Column(String(1000))
     description = Column(String(1000), nullable=False)
     name = Column(String(70), nullable=False)
 
 
 class SnapshotPageBase(Base):
-    __tablename__ = 'et_snapshot_pages'
+    __tablename__ = 'et_document_snapshot_pages'
     id = Column(Integer, primary_key=True)
-    snapshot_document_id = Column(Integer, ForeignKey('et_snapshot_documents.id'))
+    snapshot_document_id = Column(Integer, ForeignKey('et_document_snapshot_docs.id'))
     page_name = Column(String(100))
     order = Column(Integer)
 
 
 class SnapshotParagraphBase(Base):
-    __tablename__ = 'et_snapshot_paragraphs'
+    __tablename__ = 'et_document_snapshot_paragraphs'
     id = Column(Integer, primary_key=True)
-    snapshot_page_id = Column(Integer, ForeignKey('et_snapshot_pages.id'))
+    snapshot_page_id = Column(Integer, ForeignKey('et_document_snapshot_pages.id'))
     blockno = Column(String(50))
     fileno = Column(String(50))
 
 
 class UserBase(Base):
-    __tablename__ = 'et_users'
+    __tablename__ = 'et_admin_users'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
@@ -117,9 +117,9 @@ class UserBase(Base):
         return cls._fetch(session, **kwargs)
 
 class UserFingerPrintBase(Base):
-    __tablename__ = 'et_user_fingerprints'
+    __tablename__ = 'et_admin_user_fingerprints'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('et_users.id'))
+    user_id = Column(Integer, ForeignKey('et_admin_users.id'))
     finger_print = Column(String(100))
 
     @classmethod
@@ -129,12 +129,12 @@ class UserFingerPrintBase(Base):
 
 
 class TaskBase(Base):
-    __tablename__ = 'et_tasks'
+    __tablename__ = 'et_document_tasks'
     id = Column(Integer, primary_key=True)
     status = Column(Integer)
     business_status = Column(Integer)
     task_type = Column(String(20))
-    document_id = Column(Integer, ForeignKey('et_documents.id'))
+    document_id = Column(Integer, ForeignKey('et_document_docs.id'))
     snapshot_id = Column(Integer)
     create_by = Column(Integer)
     comment = Column(String(500))
@@ -148,9 +148,9 @@ class TaskBase(Base):
 
 
 class TaskAssigneeBase(Base):
-    __tablename__ = 'et_task_assignees'
+    __tablename__ = 'et_document_task_assignees'
     id = Column(Integer, primary_key=True)
-    task_id = Column(Integer, ForeignKey('et_tasks.id'))
+    task_id = Column(Integer, ForeignKey('et_document_tasks.id'))
     user_id = Column(Integer)
     name = Column(String(100), nullable=False)
 
@@ -161,9 +161,9 @@ class TaskAssigneeBase(Base):
 
 class DocumentAuditBase(Base):
     # " ".join[{action},{action_object},{prepositions},{action_target}] by {who} at {when}
-    __tablename__ = 'et_document_audits'
+    __tablename__ = 'et_document_doc_audits'
     id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey('et_documents.id'))
+    document_id = Column(Integer, ForeignKey('et_document_docs.id'))
     when = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     who = Column(String(100))
     action = Column(String(100))
