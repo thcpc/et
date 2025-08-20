@@ -1,13 +1,9 @@
-# middleware/token_auth_middleware.py
-import json
+
 from datetime import datetime, timezone
 
 import jwt
 from django.http import JsonResponse
-from django.conf import settings
-from jwt import InvalidTokenError
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
+
 
 from et.exceptions.business_error import InValidTokenError, TokenTimeOutError
 from et.models import UserBase, UserFingerPrintBase
@@ -19,16 +15,7 @@ class TokenAuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    # def get_header_token(self, request):
-    #     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    #     if not auth_header.startswith('Bearer '):
-    #         fingerprint = request.META.get("fingerprint", '')
-    #         if fingerprint:
-    #             return self.token_by_fingerprint(fingerprint)
-    #         else:
-    #             return None
-    #     else:
-    #         return auth_header.split(' ')[1]
+
 
     def __call__(self, request):
 
@@ -79,18 +66,4 @@ class TokenAuthMiddleware:
 
         return self.get_response(request)
 
-    # def token_by_fingerprint(self, fingerprint):
-    #     with DB.session(autoflush=True, autobegin=False) as session:
-    #         _session: Session = session
-    #         _user_finger_print = _session.query(UserFingerPrintBase).filter(
-    #             and_(UserFingerPrintBase.finger_print == fingerprint,
-    #                  UserFingerPrintBase.is_delete is not True)).first()
-    #         if _user_finger_print:
-    #             _token = REDIS.get_token(_user_finger_print.user_id)
-    #             if _token:
-    #                 return _token
-    #             else:
-    #                 _user = _session.query(UserBase).filter_by(id=_user_finger_print.user_id).first()
-    #                 if _user.token:
-    #                     return _user.token
-    #         return ""
+
