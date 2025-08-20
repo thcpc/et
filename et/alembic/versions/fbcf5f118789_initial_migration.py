@@ -1,3 +1,4 @@
+# coding: utf-8
 """Initial migration
 
 Revision ID: fbcf5f118789
@@ -6,6 +7,8 @@ Create Date: 2025-08-07 18:24:42.814856
 
 """
 from typing import Sequence, Union
+
+from sqlalchemy.orm.session import Session
 
 from alembic import op
 import sqlalchemy as sa
@@ -204,6 +207,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
+    seed_data()
 
 
 def downgrade() -> None:
@@ -225,3 +229,31 @@ def downgrade() -> None:
     op.drop_table('et_document_docs')
     op.drop_table('et_admin_users')
     # ### end Alembic commands ###
+
+
+from et.models import LabelCategoryBase
+
+
+def seed_data():
+    bind = op.get_bind()
+    session = Session(bind=bind)
+
+
+    if not session.query(LabelCategoryBase).first():
+            session.add(LabelCategoryBase(name='EDC', category_type='business'))
+            session.add(LabelCategoryBase(name='CRF DESIGN', category_type='business'))
+            session.add(LabelCategoryBase(name='PV', category_type='business'))
+            session.add(LabelCategoryBase(name='CTMS', category_type='business'))
+            session.add(LabelCategoryBase(name='eTMF', category_type='business'))
+            session.add(LabelCategoryBase(name='ADMIN', category_type='business'))
+            session.add(LabelCategoryBase(name='ProCheck', category_type='business'))
+            session.add(LabelCategoryBase(name='Medical Coding', category_type='business'))
+            session.add(LabelCategoryBase(name='Medical Image', category_type='business'))
+            session.add(LabelCategoryBase(name='IRC', category_type='business'))
+            session.add(LabelCategoryBase(name='其它', category_type='business'))
+            session.add(LabelCategoryBase(name='回归用例', category_type='business'))
+            session.add(LabelCategoryBase(name='自动化用例', category_type='business'))
+            session.commit()
+            print("插入数据成功")
+    else:
+            print("插入数据失败")

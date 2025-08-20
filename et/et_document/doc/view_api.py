@@ -7,7 +7,7 @@ from et import enums
 from libs.http_handle import JsonRequest
 from et_document.doc import service as doc_service
 from libs.mocks import Mock
-from libs.utils import get_header_token, decode_jwt
+from libs.jwt_utils import get_header_token, decode_jwt
 
 
 @require_GET

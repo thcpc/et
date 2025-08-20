@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from et.exceptions.business_error import InValidTokenError, TokenTimeOutError
 from et.models import UserBase, UserFingerPrintBase
 from et.settings import DB, REDIS, USER_TIMEOUT
-from libs.utils import refresh_token_if_active, get_header_token, decode_jwt
+from libs.jwt_utils import refresh_token_if_active, get_header_token, decode_jwt
 
 
 class TokenAuthMiddleware:

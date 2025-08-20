@@ -11,6 +11,7 @@ def new_label(categoryId, name):
         with _session.begin():
             _new_label = Label(name=name, category_id=categoryId)
             _session.add(_new_label)
+            _session.flush()
             return _new_label.as_dict()
 
 

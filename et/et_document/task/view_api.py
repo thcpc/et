@@ -1,7 +1,7 @@
 from django.views.decorators.http import require_GET, require_POST
 
 from libs.http_handle import JsonRequest, Success
-from libs.utils import get_header_token, decode_jwt
+from libs.jwt_utils import get_header_token, decode_jwt
 from et_document.task import service as task_service
 
 @require_GET
