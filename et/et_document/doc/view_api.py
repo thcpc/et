@@ -6,8 +6,8 @@ from et_document.task.core.task_definition.taskgenerator import TaskGenerator
 from et import enums
 from libs.http_handle import JsonRequest
 from et_document.doc import service as doc_service
-from libs.mocks import Mock
 from libs.jwt_utils import get_header_token, decode_jwt
+from et_document.task.service import dispatcher
 
 
 @require_GET
@@ -60,14 +60,6 @@ def update_document(request):
     _update_document = JsonRequest(request).get("document")
     doc_service.update_document(_update_document)
     return JsonResponse(dict(code=200, payload={}), safe=False)
-
-
-@require_GET
-def pages(request):
-    doc_id = request.GET.get("docId")
-    _pages = Mock.get_pages(doc_id)
-
-    return JsonResponse(dict(code=200, payload=_pages), safe=False)
 
 
 @require_GET
@@ -125,10 +117,8 @@ def new_snapshot(request):
     _description = json_request.get("description")
     doc_service.snapshot(_doc_id, _name, _description)
     _user_id = decode_jwt(get_header_token(request), verify=False)["user_id"]
-    # task_center.dispatcher.delay(
-    #     AssignAutoTask.spec(document_id=_doc_id, create_user_id=_user_id, assign_user_id=_user_id,
-    #                         current_task_id=None))
-    task_center.dispatcher(
+
+    dispatcher(
         TaskGenerator.definition(TaskDefine(document_id=_doc_id,
                                             create_user_id=None,
                                             old_assign_user_id=None,
@@ -159,11 +149,6 @@ def move_paragraph(request):
     # Mock.move_paragraph(change_orders)
     doc_service.move_paragraph(change_orders)
     return JsonResponse(dict(code=200, payload=dict(), safe=False))
-
-
-
-
-
 
 
 # @csrf_exempt

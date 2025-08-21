@@ -251,8 +251,8 @@ def seed_data():
             session.add(LabelCategoryBase(name='Medical Image', category_type='business'))
             session.add(LabelCategoryBase(name='IRC', category_type='business'))
             session.add(LabelCategoryBase(name='其它', category_type='business'))
-            session.add(LabelCategoryBase(name='回归用例', category_type='business'))
-            session.add(LabelCategoryBase(name='自动化用例', category_type='business'))
+            session.add(LabelCategoryBase(name='回归用例', category_type='function'))
+            session.add(LabelCategoryBase(name='自动化用例', category_type='function'))
             session.commit()
             print("插入数据成功")
     else:
