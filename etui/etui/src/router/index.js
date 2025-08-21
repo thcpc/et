@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 
-import UserLoginView from "@/views/UserLoginView.vue";
-import RegisterUserView from "@/views/RegisterUserView.vue";
-import DocumentListView from "@/views/DocumentListView.vue";
+import UserLoginView from "@/views/etAdmin/UserLoginView.vue";
+import RegisterUserView from "@/views/etAdmin/RegisterUserView.vue";
+import DocumentListView from "@/views/etDocument/DocumentListView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,7 +34,7 @@ const router = createRouter({
     {
       path: '/testCaseDetail/:id',
       name: 'testCaseDetail',
-      component: () => import('../views/TestCaseDetailView.vue'),
+      component: () => import('../views/etDocument/DocumentDetailView.vue'),
     }
   ],
 })

@@ -2,24 +2,26 @@
 import { onMounted, onUpdated, ref, watch } from 'vue'
 // import Paragraph from "@/components/FullTextParagraph.vue";
 import { httpGet, httpPostJson } from '@/core/http.js'
-import { Constant, UnKnown } from '@/core/enums.js'
-import PlantUmlParagraph from '@/components/PlantUmlParagraph.vue'
-import FullTextParagraph from '@/components/FullTextParagraph.vue'
+import { etDocumentConst, GlobalConst } from '@/core/const/enums.js'
+import PlantUmlParagraph from '@/components/etDocument/PlantUmlParagraph.vue'
+import FullTextParagraph from '@/components/etDocument/FullTextParagraph.vue'
 import eventBus from '@/core/eventBus.js'
-
+import { v4 as uuidv4 } from 'uuid'
+import { etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
 const pageProps = defineProps(['pageId', 'pageName'])
-const pageId = ref(UnKnown.ID)
-const pageName = ref(UnKnown.STR)
+const localPageId = ref(GlobalConst.UnKnown.ID)
+const localPageName = ref(GlobalConst.UnKnown.STR)
 const paragraphs = ref([])
 let sortable = null
 
 onMounted(() => {
   initFlexbox()
-  eventBus.$on('appendNewParagraph', appendNewParagraph)
+  eventBus.$on(etDocumentEvent.appendNewParagraph, appendNewParagraph)
 })
 
 const isFullText = (paragraph) => {
-  return paragraph.paragraphType === Constant.FullText
+  return paragraph.paragraphType === etDocumentConst.FullText
 }
 const initFlexbox = () => {
   if (sortable != null) {
@@ -68,13 +70,13 @@ const initFlexbox = () => {
         console.log('未找到匹配的数字')
       }
       let changeOrders = paragraphs.value.map((e) => ({ id: e.id, order: e.order }))
-      httpPostJson('/document/api/move/paragraph', { changeOrders: changeOrders }, () => {})
+      httpPostJson(etDocumentUrl.moveParagraph, { changeOrders: changeOrders }, () => {})
     }
   })
 }
 
 const appendNewParagraph = (newParagraph) => {
-  if (newParagraph.changePageId === pageId.value) {
+  if (newParagraph.changePageId === localPageId.value) {
     paragraphs.value.push(newParagraph.paragraph)
     // initFlexbox()
   }
@@ -86,17 +88,17 @@ onUpdated(() => {
 })
 
 const uuid = () => {
-  return crypto.randomUUID()
+  return uuidv4()
 }
 
 const newParagraph = () => {
-  eventBus.$emit('newParagraph', pageProps.pageId)
+  eventBus.$emit(etDocumentEvent.newParagraph, pageProps.pageId)
 }
 
 watch(
   () => pageProps.pageId,
   (newValue, oldValue) => {
-    httpGet('/document/api/page', { pageId: pageProps.pageId }, (resp) => {
+    httpGet(etDocumentUrl.getPage, { pageId: pageProps.pageId }, (resp) => {
       paragraphs.value = resp
       console.log(paragraphs.value)
       // sortable.option("sort", true)
@@ -108,7 +110,7 @@ watch(
 watch(
   () => pageProps.pageName,
   (newValue, oldValue) => {
-    pageName.value = newValue
+    localPageName.value = newValue
   },
   { flush: 'post' },
 )
@@ -135,7 +137,7 @@ const stackedListItemClass = (paragraph) => {
 
 <template>
   <div class="card-header">
-    <h3 class="card-title">{{ pageName }}</h3>
+    <h3 class="card-title">{{ localPageName }}</h3>
     <div class="card-actions">
       <a
         href="#"

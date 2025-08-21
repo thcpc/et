@@ -1,11 +1,11 @@
 <script setup>
 import { httpGet, httpPostJson } from '@/core/http.js'
-import { nextTick, onMounted, ref, watch } from 'vue'
-import eventBus from '@/core/eventBus.js'
-import {CategoryType, Constant, UnKnown} from '@/core/enums.js'
-import CarouselLabels from '@/components/modal/CarouselLabels.vue'
+import { onMounted, ref, watch } from 'vue'
+import { etDocumentConst, GlobalConst } from '@/core/const/enums.js'
+import CarouselLabels from '@/components/etDocument/CarouselLabels.vue'
+import { etDocumentUrl } from '@/core/const/urls.js'
 
-const documentName = ref(UnKnown.EMPTY)
+const documentName = ref(GlobalConst.UnKnown.EMPTY)
 
 const businessCategories = ref([])
 const functionCategories = ref([])
@@ -15,11 +15,10 @@ const selectedLabels = ref([])
 const editDocument = defineProps(['id'])
 const emit = defineEmits(['close'])
 
-const isChanged = ref(false)
 
 const submit = () => {
   httpPostJson(
-    '/document/api/update/document',
+    etDocumentUrl.updateDocument,
     {
       document: {
         id: editDocument.id,
@@ -56,8 +55,8 @@ const prePage = () => {
 watch(
   () => editDocument.id,
   (newValue, oldValue) => {
-    if (newValue !== UnKnown.ID) {
-      httpGet('/document/api/document', { docId: editDocument.id, includePage: false }, (resp) => {
+    if (newValue !== GlobalConst.UnKnown.ID) {
+      httpGet(etDocumentUrl.getDocument, { docId: editDocument.id, includePage: false }, (resp) => {
         documentName.value = resp.document.name
         selectedLabels.value = resp.document.labels
       })
@@ -71,15 +70,15 @@ onMounted(() => {
 
   modal.addEventListener('show.bs.modal', async () => {
     currentPage.value = 1
-    if (editDocument.id !== UnKnown.ID) {
-      httpGet('/document/api/document', { docId: editDocument.id, includePage: false }, (resp) => {
+    if (editDocument.id !== GlobalConst.UnKnown.ID) {
+      httpGet(etDocumentUrl.getDocument, { docId: editDocument.id, includePage: false }, (resp) => {
         documentName.value = resp.document.name
         selectedLabels.value = resp.document.labels
       })
     }
-    httpGet('/label/api/labels', {}, (resp) => {
-      businessCategories.value = resp.filter((c)=>c.category_type === CategoryType.Business)
-      functionCategories.value = resp.filter((c)=>c.category_type === CategoryType.Function)
+    httpGet(etDocumentUrl.getLabels, {}, (resp) => {
+      businessCategories.value = resp.filter((c)=>c.category_type === etDocumentConst.Business)
+      functionCategories.value = resp.filter((c)=>c.category_type === etDocumentConst.Function)
     })
   })
 
@@ -89,7 +88,7 @@ onMounted(() => {
     if (e) {
       e.to('0')
     }
-    documentName.value = UnKnown.EMPTY
+    documentName.value = GlobalConst.UnKnown.EMPTY
     selectedLabels.value = []
     emit('close')
   })

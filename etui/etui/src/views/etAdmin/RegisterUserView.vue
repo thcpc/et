@@ -4,6 +4,7 @@ import {httpPostJson} from "@/core/http.js";
 import {useRouter} from "vue-router";
 
 import {fingerPrint} from "@/core/utils.js";
+import { etAdminUrl } from '@/core/const/urls.js'
 
 const username = ref('')
 const password = ref('')
@@ -16,7 +17,7 @@ onMounted(()=>{
 })
 
 const register = ()=>{
-  httpPostJson("/user/api/register", {username:username.value, password:password.value}, ()=>{
+  httpPostJson(etAdminUrl.register, {username:username.value, password:password.value}, ()=>{
     router.replace('/');
   })
 }

@@ -1,18 +1,30 @@
 import axios from 'axios'
 import {userAuthStore} from "@/stores/tokenManager.js";
 import eventBus from "@/core/eventBus.js";
-import {ErrCode} from "@/core/enums.js";
+import { GlobalConst } from '@/core/const/enums.js'
+import Cookies from 'js-cookie';
+import { globalEvent } from '@/core/const/events.js'
 
-// const dev = 'http://127.0.0.1:8080'
-const dev = import.meta.env.VITE_API_BASE_URL
-const root = dev
-axios.interceptors.request.use(
+const backendURI = import.meta.env.VITE_API_BASE_URL
+
+const api = axios.create({
+  baseURL: backendURI,  // 替换为你的 Django 后端地址
+  withCredentials: true,  // 允许跨域请求携带 Cookie
+});
+
+
+api.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
     let user = userAuthStore()
+
+    const csrfToken = Cookies.get('csrftoken');
+    // console.log(Cookies)
     if(user.token){
       config.headers['Authorization'] = `Bearer ${user.token}`;
     }
+    config.headers['X-CSRFToken'] = csrfToken;
+    // config.headers['credentials'] = "include";
     document.getElementById('overlay').classList.remove('d-none')
     return config
   },
@@ -23,7 +35,7 @@ axios.interceptors.request.use(
   },
 )
 
-axios.interceptors.response.use(
+api.interceptors.response.use(
   (response) => {
     // 对响应数据做些什么
     document.getElementById('overlay').classList.add('d-none')
@@ -37,8 +49,8 @@ axios.interceptors.response.use(
 )
 
 export function httpGet(url, params, callBack, errCallBack) {
-  axios
-    .get(root + url, {
+  api
+    .get(url, {
       params: params,
     })
     .then((response) => {
@@ -52,8 +64,8 @@ export function httpGet(url, params, callBack, errCallBack) {
 }
 
 export function httpDelete(url, params, callBack, errCallBack) {
-  axios
-    .delete(root + url, {
+  api
+    .delete(url, {
       params: params,
     })
     .then((response) => {
@@ -66,9 +78,9 @@ export function httpDelete(url, params, callBack, errCallBack) {
 }
 
 export function httpPostJson(url, data, callBack, errCallBack) {
-  axios.defaults.headers.post['Content-Type'] = 'application/json'
-  axios
-    .post(root + url, data)
+  api.defaults.headers.post['Content-Type'] = 'application/json'
+  api
+    .post(url, data)
     .then((response) => {
       httpResponse(response, callBack, errCallBack)
     })
@@ -79,8 +91,8 @@ export function httpPostJson(url, data, callBack, errCallBack) {
 }
 
 export function httpPostForm(url, formData, callBack, errCallBack) {
-  axios
-    .post(root + url, formData, {
+  api
+    .post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data', // 必须设置
       },
@@ -97,14 +109,18 @@ export function httpPostForm(url, formData, callBack, errCallBack) {
 export function httpResponse(response, callBack, errCallBack) {
   if (response.data.code === 200) {
     callBack(response.data.payload)
-  } else if(response.data.code===ErrCode.InvalidToken || response.data.code===ErrCode.TokenTimeOut){
+  } else if(response.data.code===GlobalConst.ErrCode.InvalidToken || response.data.code===GlobalConst.ErrCode.TokenTimeOut){
       if(errCallBack){ errCallBack() }
-      eventBus.$emit('JwtTokenException', { config: response.config, callBack: callBack, errCode: response.data.code })
-    }
+      eventBus.$emit(globalEvent.JwtTokenException, { config: response.config, callBack: callBack, errCode: response.data.code })
+  }
+  else {
+    alert(response.data.err)
+  }
+
 }
 
 export function httpRetry(config, callBack){
-  axios.request(config).then(response=>{
+  api.request(config).then(response=>{
     httpResponse(response, callBack)
   }).catch(error=>{
     alert(error)

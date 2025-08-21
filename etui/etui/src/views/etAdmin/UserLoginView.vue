@@ -4,8 +4,8 @@ import { httpGet, httpPostJson } from '@/core/http.js'
 import router from '@/router/index.js'
 import { userAuthStore } from '@/stores/tokenManager.js'
 
-import FingerprintJS2 from 'fingerprintjs2'
 import { fingerPrint } from '@/core/utils.js'
+import { etAdminUrl } from '@/core/const/urls.js'
 
 const username = ref('')
 const password = ref('')
@@ -13,7 +13,7 @@ const authStore = userAuthStore()
 
 onMounted(() => {
   fingerPrint().then((finger) => {
-    httpGet('/user/api/device', { fingerPrint: finger }, (resp) => {
+    httpGet(etAdminUrl.device, { fingerPrint: finger }, (resp) => {
       username.value = resp.username
     })
   })
@@ -22,7 +22,7 @@ onMounted(() => {
 const login = () => {
   fingerPrint().then((finger) => {
     httpPostJson(
-      '/user/api/login',
+      etAdminUrl.login,
       {
         username: username.value,
         password: password.value,

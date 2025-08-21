@@ -1,15 +1,16 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { UnKnown } from '@/core/enums.js'
+import { GlobalConst } from '@/core/const/enums.js'
 import { httpPostJson } from '@/core/http.js'
+import { etDocumentUrl } from '@/core/const/urls.js'
 
 const parentData = defineProps(['docId'])
-const name = ref(UnKnown.EMPTY)
-const description = ref(UnKnown.EMPTY)
+const name = ref(GlobalConst.UnKnown.EMPTY)
+const description = ref(GlobalConst.UnKnown.EMPTY)
 
 const submit = () => {
   httpPostJson(
-    '/document/api/new/snapshot',
+    etDocumentUrl.snapshot,
     { name: name.value, description: description.value, docId: parentData.docId },
     (resp) => {
       $('#snapshotModal').modal('hide')
@@ -28,8 +29,8 @@ onMounted(() => {
   })
 
   modal.addEventListener('hide.bs.modal', () => {
-    name.value = UnKnown.EMPTY
-    description.value = UnKnown.EMPTY
+    name.value = GlobalConst.UnKnown.EMPTY
+    description.value = GlobalConst.UnKnown.EMPTY
   })
 })
 </script>

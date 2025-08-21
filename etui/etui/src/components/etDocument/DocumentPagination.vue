@@ -74,7 +74,7 @@ const nextClass = () => {
         prev
       </a>
     </li>
-    <li class="page-item" v-for="index in paginationPage">
+    <li class="page-item" v-for="index in paginationPage" :key="index">
       <a class="page-link" href="#" @click="goPage(index)">{{ goPageNo(index) }}</a>
     </li>
     <!--    <li class="page-item"><a class="page-link" href="#">1</a></li>-->

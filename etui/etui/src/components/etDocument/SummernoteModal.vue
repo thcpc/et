@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted} from "vue";
 
-const props = defineProps(["paragraph"])
+// const props = defineProps(["paragraph"])
 const initSummernote = ()=>{
   // $(`#editorId`).summernote({
   //   placeholder: '请输入内容',

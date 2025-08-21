@@ -2,8 +2,11 @@
 import { httpGet, httpPostJson } from '@/core/http.js'
 import { onMounted, ref } from 'vue'
 import eventBus from '@/core/eventBus.js'
-import CarouselLabels from '@/components/modal/CarouselLabels.vue'
-import { CategoryType } from '@/core/enums.js'
+import CarouselLabels from '@/components/etDocument/CarouselLabels.vue'
+import { etDocumentConst } from '@/core/const/enums.js'
+import { etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
+
 
 const documentName = defineModel()
 
@@ -14,13 +17,13 @@ const functionCategories = ref([])
 
 const submit = () => {
   httpPostJson(
-    '/document/api/new/document',
+    etDocumentUrl.newDocument,
     {
       name: documentName.value,
       labels: selectedLabels.value,
     },
     (resp) => {
-      eventBus.$emit('refresh-document-list', 1)
+      eventBus.$emit(etDocumentEvent.refreshDocumentList, 1)
       $('#newDocument').modal('hide')
     },
     () => {
@@ -52,9 +55,9 @@ onMounted(() => {
 
   modal.addEventListener('shown.bs.modal', () => {
     currentPage.value = 1
-    httpGet('/label/api/labels', {}, (resp) => {
-      businessCategories.value = resp.filter((c) => c.category_type === CategoryType.Business)
-      functionCategories.value = resp.filter((c) => c.category_type === CategoryType.Function)
+    httpGet(etDocumentUrl.getLabels, {}, (resp) => {
+      businessCategories.value = resp.filter((c) => c.category_type === etDocumentConst.Business)
+      functionCategories.value = resp.filter((c) => c.category_type === etDocumentConst.Function)
     })
   })
 

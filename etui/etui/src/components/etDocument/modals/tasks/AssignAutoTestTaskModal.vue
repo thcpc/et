@@ -1,13 +1,16 @@
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import { onMounted, ref} from "vue";
 import eventBus from "@/core/eventBus.js";
 import {httpGet, httpPostJson} from "@/core/http.js";
-import {UnKnown} from "@/core/enums.js";
+import { GlobalConst } from '@/core/const/enums.js'
+import { etDocumentEvent } from '@/core/const/events.js'
+import { etAdminUrl, etDocumentUrl } from '@/core/const/urls.js'
+
 const taskInfo = ref({})
-const selectUser = ref(UnKnown.ID)
+const selectUser = ref(GlobalConst.UnKnown.ID)
 
 onMounted(()=>{
-  eventBus.$on('AssigneeAutoTestTask', (task) => {
+  eventBus.$on(etDocumentEvent.AssigneeAutoTestTask, (task) => {
     taskInfo.value = task
     $('#assigneeAutoTestTaskModal').modal("show")
   })
@@ -29,14 +32,14 @@ const selectDestroy = ()=>{
 }
 
 const reAssignee = ()=>{
-  httpPostJson("/task/api/reAssignee",{
+  httpPostJson(etDocumentUrl.reAssignee,{
     task_id: assigneeInfo.value.task_id,
     new_assignee_id: selectUser.value,
     old_assignee_id: assigneeInfo.value.user_id,
     comment: comment.value
   },(resp)=>{
     $("#assigneeAutoTestTaskModal").modal("hide")
-    eventBus.$emit('refresh-document-list')
+    eventBus.$emit(etDocumentEvent.refreshDocumentList)
   },()=>{})
 }
 const tomSelectSingleton = () => {
@@ -57,7 +60,7 @@ const newTomSelect = () => {
         callback();
         return;
       }
-      httpGet("/user/api/users",{},(response)=>{
+      httpGet(etAdminUrl.users,{},(response)=>{
         callback(response);
         self.settings.load = null;
 

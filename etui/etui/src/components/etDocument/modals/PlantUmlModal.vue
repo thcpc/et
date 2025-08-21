@@ -2,11 +2,12 @@
 import {onMounted, ref} from "vue";
 import {encode} from "plantuml-encoder";
 import eventBus from "@/core/eventBus.js";
+import { etDocumentEvent } from '@/core/const/events.js'
 
 const plantUMLImage = ref('');
 
 onMounted(()=>{
-  eventBus.$on('preview-plantuml', (imageContent) => {
+  eventBus.$on(etDocumentEvent.previewPlantuml, (imageContent) => {
     const encoded = encode(imageContent);
     plantUMLImage.value = `http://www.plantuml.com/plantuml/svg/${encoded}`;
   });

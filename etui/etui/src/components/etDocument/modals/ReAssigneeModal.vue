@@ -1,15 +1,17 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
-import { UnKnown } from '@/core/enums.js'
+import { GlobalConst } from '@/core/const/enums.js'
 import {httpGet, httpPostJson} from "@/core/http.js";
 import eventBus from "@/core/eventBus.js";
+import { etAdminUrl, etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
 
-const selectUser = ref(UnKnown.ID)
+const selectUser = ref(GlobalConst.UnKnown.ID)
 const assigneeInfo = ref({})
 const comment = ref("")
 
 onMounted(()=>{
-  eventBus.$on('reAssigneeTask', (assignee) => {
+  eventBus.$on(etDocumentEvent.reAssigneeTask, (assignee) => {
     assigneeInfo.value = assignee
   })
   const modal = document.getElementById('reAssigneeModal');
@@ -30,14 +32,14 @@ const selectDestroy = ()=>{
 }
 
 const reAssignee = ()=>{
-  httpPostJson("/task/api/reAssignee",{
+  httpPostJson(etDocumentUrl.reAssignee,{
       task_id: assigneeInfo.value.task_id,
       new_assignee_id: selectUser.value,
       old_assignee_id: assigneeInfo.value.user_id,
       comment: comment.value
   },(resp)=>{
     $("#reAssigneeModal").modal("hide")
-    eventBus.$emit('refresh-document-list')
+    eventBus.$emit(etDocumentEvent.refreshDocumentList)
   },()=>{})
 }
 const tomSelectSingleton = () => {
@@ -58,7 +60,7 @@ const newTomSelect = () => {
         callback();
         return;
       }
-      httpGet("/user/api/users",{},(response)=>{
+      httpGet(etAdminUrl.users,{},(response)=>{
         callback(response);
         self.settings.load = null;
 

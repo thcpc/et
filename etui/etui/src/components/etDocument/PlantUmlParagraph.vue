@@ -6,12 +6,13 @@ import {onMounted, ref} from 'vue'
 import { EditorView } from '@codemirror/view'
 
 const paragraphProps = defineProps(['paragraph'])
-import { tags } from '@lezer/highlight'
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+
 import { basicSetup } from "codemirror";
 import { encode } from 'plantuml-encoder';
 import eventBus from "@/core/eventBus.js";
 import { httpPostJson } from "@/core/http.js";
+import { etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
 
 // const plantUMLHighlightStyle = HighlightStyle.define([
 //   { tag: tags.keyword, color: '#00f' }, // 关键字为蓝色
@@ -52,12 +53,12 @@ onMounted(()=>{
 })
 
 const preview = ()=>{
-  eventBus.$emit("preview-plantuml", paragraphProps.paragraph.contents)
+  eventBus.$emit(etDocumentEvent.previewPlantuml, paragraphProps.paragraph.contents)
 }
 
 const save = () => {
   httpPostJson(
-    '/document/api/update/paragraph',
+    etDocumentUrl.updateParagraph,
     {
       paragraphId: paragraphProps.paragraph.id,
       contents: paragraphProps.paragraph.contents,
@@ -73,16 +74,6 @@ const save = () => {
       }
     },
   )
-
-
-
-  // isDisplayImage.value = true
-  // if (editorView) {
-  //   editorView.destroy()
-  //   editorView = null
-  //   const encoded = encode(paragraphProps.paragraph.contents);
-  //   plantUMLImage.value = `http://www.plantuml.com/plantuml/svg/${encoded}`;
-  // }
 }
 
 const paragraphId = () => {

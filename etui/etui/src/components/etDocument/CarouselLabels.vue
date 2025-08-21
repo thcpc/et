@@ -1,12 +1,13 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { UnKnown } from '@/core/enums.js'
+import { GlobalConst } from '@/core/const/enums.js'
 import { httpPostJson } from '@/core/http.js'
+import { etDocumentUrl } from '@/core/const/urls.js'
 
 const data = defineProps(['categories','selectedLabels', "op", 'disableNew'])
-const newLabelValue = ref(UnKnown.EMPTY)
-const currentCategory = ref(UnKnown.ID)
-const selectedLabels = ref([])
+const newLabelValue = ref(GlobalConst.UnKnown.EMPTY)
+const currentCategory = ref(GlobalConst.UnKnown.ID)
+const localSelectedLabels = ref([])
 const emit = defineEmits(['updateSelectedLabels'])
 const href = (category) => {
   return '#tabs-' + category.id + "-" + data.op.value
@@ -23,7 +24,7 @@ const choseCategory = (id) => {
 
 const newLabel = () => {
   httpPostJson(
-    '/label/api/new/label',
+    etDocumentUrl.newLabel,
     {
       categoryId: currentCategory.value,
       name: newLabelValue.value,
@@ -43,16 +44,15 @@ watch(
   () => data.selectedLabels,
   (newValue, oldValue) => {
 
-    selectedLabels.value = data.selectedLabels
+    localSelectedLabels.value = data.selectedLabels
   },
   { flush: 'post' },
 )
 
 watch(
-  () => selectedLabels.value,
+  () => localSelectedLabels.value,
   (newValue, oldValue) => {
-
-    emit('updateSelectedLabels', selectedLabels.value)
+    emit('updateSelectedLabels', localSelectedLabels.value)
   },
   { flush: 'post' },
 )
@@ -61,7 +61,7 @@ watch(
 watch(
   () => currentCategory.value,
   (newValue, oldValue) => {
-    newLabelValue.value = UnKnown.EMPTY
+    newLabelValue.value = GlobalConst.UnKnown.EMPTY
   },
   { flush: 'post' },
 )
@@ -70,7 +70,7 @@ onMounted(() => {
   const modal = document.getElementById('CategoryTab')
 
   modal.addEventListener('hide.bs.tab', () => {
-    newLabelValue.value = UnKnown.EMPTY
+    newLabelValue.value = GlobalConst.UnKnown.EMPTY
   })
 })
 
@@ -116,8 +116,8 @@ const linkClass = (index)=>{
           :key="index"
         >
           <div class="form-selectgroup form-selectgroup-pills">
-            <label v-for="label in category.labels" class="form-selectgroup-item">
-              <input type="checkbox" :value="label.id" class="form-selectgroup-input" v-model="selectedLabels" />
+            <label v-for="label in category.labels" class="form-selectgroup-item" :key="label">
+              <input type="checkbox" :value="label.id" class="form-selectgroup-input" v-model="localSelectedLabels" />
               <span class="form-selectgroup-label">{{ label.name }}</span>
             </label>
           </div>

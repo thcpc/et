@@ -1,9 +1,10 @@
 <script setup>
-import { Constant } from '@/core/enums.js'
+
 import { httpDelete, httpPostJson } from '@/core/http.js'
 import Editor from "@toast-ui/editor";
 import Viewer from '@toast-ui/editor/dist/toastui-editor-viewer';
 import {onMounted} from "vue";
+import { etDocumentUrl } from '@/core/const/urls.js'
 
 const paragraphProps = defineProps(['paragraph'])
 
@@ -62,7 +63,7 @@ const save = () => {
   let contents = markDownEditor.getMarkdown()
 
   httpPostJson(
-    '/document/api/update/paragraph',
+    etDocumentUrl.updateParagraph,
     {
       paragraphId: paragraphProps.paragraph.id,
       contents: contents,
@@ -93,7 +94,7 @@ const saveId = () => {
 
 const removeParagraph = () => {
   httpDelete(
-    '/document/api/delete/paragraph',
+    etDocumentUrl.deleteParagraph,
     { paragraphId: paragraphProps.paragraph.id },
     (resp) => {
       emit('deleteSelf', paragraphProps.paragraph.id)

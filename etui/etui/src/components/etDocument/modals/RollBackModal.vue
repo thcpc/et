@@ -1,13 +1,15 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
-import { UnKnown } from '@/core/enums.js'
-import {httpGet, httpPostJson} from "@/core/http.js";
+
+import { httpPostJson} from "@/core/http.js";
 import eventBus from "@/core/eventBus.js";
+import { etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
 
 const taskInfo = ref({})
 const comment = ref("")
 onMounted(()=>{
-  eventBus.$on('rollBackTask', (task) => {
+  eventBus.$on(etDocumentEvent.rollBackTask, (task) => {
     taskInfo.value = task
     console.log(taskInfo.value.id)
   })
@@ -16,12 +18,12 @@ onMounted(()=>{
 
 
 const rollBack = ()=>{
-  httpPostJson("/task/api/rollBack",{
+  httpPostJson(etDocumentUrl.taskRollBack,{
       task_id: taskInfo.value.id,
       comment: comment.value
   },(resp)=>{
     $("#rollBackModal").modal("hide")
-    eventBus.$emit('refresh-document-list')
+    eventBus.$emit(etDocumentEvent.refreshDocumentList)
   },()=>{})
 }
 

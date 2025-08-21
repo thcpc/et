@@ -1,17 +1,19 @@
 <script setup>
-import { Constant, UnKnown } from '@/core/enums.js'
+import { etDocumentConst, GlobalConst } from '@/core/const/enums.js'
 import { onMounted, ref, watch } from 'vue'
 import eventBus from '@/core/eventBus.js'
 import { encode } from 'plantuml-encoder'
 import { EditorState } from '@codemirror/state'
 import { basicSetup } from 'codemirror'
-import { syntaxHighlighting } from '@codemirror/language'
-import { EditorView } from '@codemirror/view'
-import {httpGet, httpPostForm, httpPostJson} from '@/core/http.js'
-import Editor from '@toast-ui/editor';
 
-const pageId = ref(UnKnown.ID)
-const paragraphType = ref(Constant.FullText)
+import { EditorView } from '@codemirror/view'
+import { httpPostJson} from '@/core/http.js'
+import Editor from '@toast-ui/editor';
+import { etDocumentUrl } from '@/core/const/urls.js'
+import { etDocumentEvent } from '@/core/const/events.js'
+
+const pageId = ref(GlobalConst.UnKnown.ID)
+const paragraphType = ref(etDocumentConst.FullText)
 
 const paragraphContent = ref('')
 const paragraphImage = ref('')
@@ -20,7 +22,7 @@ const editorContainer = ref(null)
 const isPreview = ref(false)
 
 onMounted(() => {
-  eventBus.$on('newParagraph', (id) => {
+  eventBus.$on(etDocumentEvent.newParagraph, (id) => {
     pageId.value = id
   })
 
@@ -28,12 +30,12 @@ onMounted(() => {
   modal.addEventListener('hide.bs.modal', () => {
 
     clearData()
-    if (paragraphType.value === Constant.FullText) {
+    if (paragraphType.value === etDocumentConst.FullText) {
       destroyFullText()
-    } else if (paragraphType.value === Constant.PlantUml) {
+    } else if (paragraphType.value === etDocumentConst.PlantUml) {
       destroyPlantuml()
     }
-    paragraphType.value = Constant.FullText
+    paragraphType.value = etDocumentConst.FullText
 
 
   })
@@ -45,7 +47,7 @@ onMounted(() => {
 })
 
 const clearData = ()=>{
-  pageId.value = UnKnown.ID
+  pageId.value = GlobalConst.UnKnown.ID
   isPreview.value = false
   editorContainer.value = null
   paragraphContent.value = ""
@@ -54,21 +56,21 @@ const clearData = ()=>{
 
 const preview = () => {
   isPreview.value = true
-  if (paragraphType.value === Constant.PlantUml) {
+  if (paragraphType.value === etDocumentConst.PlantUml) {
     destroyPlantuml()
     const encoded = encode(paragraphContent.value)
     paragraphImage.value = `http://www.plantuml.com/plantuml/svg/${encoded}`
   }
-  // } else if (paragraphType.value === Constant.FullText) {
+  // } else if (paragraphType.value === etDocumentConst.FullText) {
   //   destroyFullText()
   // }
 }
 
 const edit = () => {
   isPreview.value = false
-  if (paragraphType.value === Constant.PlantUml) {
+  if (paragraphType.value === etDocumentConst.PlantUml) {
     createPlantuml()
-  } else if (paragraphType.value === Constant.FullText) {
+  } else if (paragraphType.value === etDocumentConst.FullText) {
     createFullText()
   }
 }
@@ -101,15 +103,15 @@ const destroyFullText = () => {
 
 const submit = () =>{
   let contents = ""
-  if(paragraphType.value === Constant.PlantUml){
+  if(paragraphType.value === etDocumentConst.PlantUml){
     contents = paragraphContent.value
-  }else if(paragraphType.value === Constant.FullText){
+  }else if(paragraphType.value === etDocumentConst.FullText){
     // contents = $('#paragraphEditor').summernote('code')
     contents = markDownEditor.getMarkdown()
   }
-  httpPostJson('/document/api/new/paragraph', {contents: contents, pageId: pageId.value, paragraphType: paragraphType.value},(resp)=>{
+  httpPostJson(etDocumentUrl.newParagraph, {contents: contents, pageId: pageId.value, paragraphType: paragraphType.value},(resp)=>{
     $('#newParagraph').modal('hide');
-    eventBus.$emit("appendNewParagraph", {changePageId: pageId.value, paragraph: {id:resp.id, order:resp.order, contents:contents,paragraphType: resp.paragraphType}})
+    eventBus.$emit(etDocumentEvent.appendNewParagraph, {changePageId: pageId.value, paragraph: {id:resp.id, order:resp.order, contents:contents,paragraphType: resp.paragraphType}})
   },()=>{
     $('#newParagraph').modal('hide');
   })
@@ -145,10 +147,10 @@ const createPlantuml = () => {
 watch(
   () => paragraphType.value,
   (newValue, oldValue) => {
-    if (newValue === Constant.FullText) {
+    if (newValue === etDocumentConst.FullText) {
       destroyPlantuml()
       createFullText()
-    } else if (newValue === Constant.PlantUml) {
+    } else if (newValue === etDocumentConst.PlantUml) {
       destroyFullText()
       createPlantuml()
     }
@@ -180,13 +182,13 @@ const destroyPlantuml = () => {
         </div>
         <div class="modal-body">
           <select class="form-select" v-model="paragraphType">
-            <option :value="Constant.FullText">富文本</option>
-            <option :value="Constant.PlantUml">PlantUml</option>
+            <option :value="etDocumentConst.FullText">富文本</option>
+            <option :value="etDocumentConst.PlantUml">PlantUml</option>
           </select>
-          <div v-show="paragraphType === Constant.FullText">
+          <div v-show="paragraphType === etDocumentConst.FullText">
             <div id="paragraphEditor"></div>
           </div>
-          <div v-show="paragraphType === Constant.PlantUml">
+          <div v-show="paragraphType === etDocumentConst.PlantUml">
             <div v-show="!isPreview" ref="editorContainer"></div>
             <img v-show="isPreview" :src="paragraphImage" alt="PlantUML Diagram" />
           </div>

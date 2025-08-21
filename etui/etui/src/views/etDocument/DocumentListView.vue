@@ -4,23 +4,29 @@ import { httpDelete, httpGet } from '@/core/http.js'
 import eventBus from '@/core/eventBus.js'
 import { useRouter } from 'vue-router'
 import { dateFormat } from '@/core/utils.js'
-import {DocTab, TaskType, UnKnown} from '@/core/enums.js'
-import EditDocumentModal from '@/components/modal/EditDocumentModal.vue'
-import Pagination from '@/components/Pagination.vue'
-import Navigation from '@/components/Navigation.vue'
+import { etDocumentConst, GlobalConst } from '@/core/const/enums.js'
+import EditDocumentModal from '@/components/etDocument/modals/EditDocumentModal.vue'
+import DocumentPagination from '@/components/etDocument/DocumentPagination.vue'
+import AppNavigation from '@/components/common/AppNavigation.vue'
+import { etDocumentEvent } from '@/core/const/events.js'
+import { etDocumentUrl } from '@/core/const/urls.js'
+import NewDocumentModal from '@/components/etDocument/modals/NewDocumentModal.vue'
+import ReAssigneeModal from '@/components/etDocument/modals/ReAssigneeModal.vue'
+import RollBackModal from '@/components/etDocument/modals/RollBackModal.vue'
+import AssignAutoTestTaskModal from '@/components/etDocument/modals/tasks/AssignAutoTestTaskModal.vue'
 
 const documents = ref([])
 const router = useRouter()
-const editDocumentID = ref(UnKnown.ID)
+const editDocumentID = ref(GlobalConst.UnKnown.ID)
 const perCount = ref(7)
 const totalPage = ref(0)
-const currentTab = ref(DocTab.User)
+const currentTab = ref(etDocumentConst.DocTab.User)
 const currentPageNo = ref(1)
 
 onMounted(() => {
   // eventBus.$on('appendNewDocument', appendNewDocument)
   get_user_documents()
-  eventBus.$on('refresh-document-list', refresh)
+  eventBus.$on(etDocumentEvent.refreshDocumentList, refresh)
 })
 
 const get_documents = (url, pageNo, tab) => {
@@ -29,19 +35,20 @@ const get_documents = (url, pageNo, tab) => {
     currentPageNo.value = pageNo
     totalPage.value = resp.totalPage
     currentTab.value = tab
+
   })
 }
 
 const get_all_documents = () => {
-  get_documents('/document/api/documents', 1, DocTab.All)
+  get_documents(etDocumentUrl.getDocuments, 1, etDocumentConst.DocTab.All)
 }
 
 const get_user_documents = () => {
-  get_documents('/document/api/user/documents', 1, DocTab.User)
+  get_documents(etDocumentUrl.getUserDocuments, 1, etDocumentConst.DocTab.User)
 }
 
 const get_user_task = () => {
-  get_documents('/task/api/user/tasks', 1, DocTab.Task)
+  get_documents(etDocumentUrl.getUserTasks, 1, etDocumentConst.DocTab.Task)
 }
 
 const refresh = (pageNo) => {
@@ -49,26 +56,27 @@ const refresh = (pageNo) => {
   if(pageNo){
     no = pageNo
   }
-  console.log(no)
-  if (currentTab.value === DocTab.All) {
-    get_documents('/document/api/documents', no, DocTab.All)
-  } else if (currentTab.value === DocTab.User) {
-    get_documents('/document/api/user/documents', no, DocTab.User)
-  } else if (currentTab.value === DocTab.Task) {
-    get_documents('/task/api/user/tasks', no, DocTab.Task)
+
+  if (currentTab.value === etDocumentConst.DocTab.All) {
+    get_documents(etDocumentUrl.getDocuments, no, etDocumentConst.DocTab.All)
+  } else if (currentTab.value === etDocumentConst.DocTab.User) {
+    get_documents(etDocumentUrl.getUserDocuments, no, etDocumentConst.DocTab.User)
+  } else if (currentTab.value === etDocumentConst.DocTab.Task) {
+    get_documents(etDocumentUrl.getUserTasks, no, etDocumentConst.DocTab.Task)
   }
 }
 
 const goPageAll = (pageNo) => {
-  get_documents('/document/api/documents', pageNo, DocTab.All)
+  get_documents(etDocumentUrl.getDocuments, pageNo, etDocumentConst.DocTab.All)
 }
 
 const goPageUser = (pageNo) => {
-  get_documents('/document/api/user/documents', pageNo, DocTab.User)
+
+  get_documents(etDocumentUrl.getUserDocuments, pageNo, etDocumentConst.DocTab.User)
 }
 
 const goUserTask = (pageNo) => {
-  get_documents('/task/api/user/tasks', pageNo, DocTab.Task)
+  get_documents(etDocumentUrl.getUserTasks, pageNo, etDocumentConst.DocTab.Task)
 }
 
 const newWindow = (doc) => {
@@ -76,12 +84,12 @@ const newWindow = (doc) => {
 }
 
 const reAssignee = (assignee) =>{
-  eventBus.$emit("reAssigneeTask", assignee)
+  eventBus.$emit(etDocumentEvent.reAssigneeTask, assignee)
 
 }
 
 const rollBack = (task) => {
-  eventBus.$emit("rollBackTask", task)
+  eventBus.$emit(etDocumentEvent.rollBackTask, task)
 }
 
 
@@ -90,16 +98,13 @@ const openEditDocument = (doc) => {
 }
 
 const closeEditDocument = () => {
-  editDocumentID.value = UnKnown.ID
+  editDocumentID.value = GlobalConst.UnKnown.ID
   refresh()
 }
 
-const appendNewDocument = (document) => {
-  documents.value.push(document)
-}
 
 const deleteDocument = (document) => {
-  httpDelete('/document/api/delete/document', { documentId: document.id }, () => {
+  httpDelete(etDocumentUrl.deleteDocument, { documentId: document.id }, () => {
     const index = documents.value.findIndex((e) => e.id === document.id)
     if (index !== -1) {
       documents.value.splice(index, 1)
@@ -118,8 +123,8 @@ const taskStatus = (state) => {
 }
 
 const doTask = (task)=>{
-  if(task.task_type === TaskType.AssignAutoTask){
-    eventBus.$emit("AssigneeAutoTestTask", task)
+  if(task.task_type === etDocumentConst.AssignAutoTask){
+    eventBus.$emit(etDocumentEvent.AssigneeAutoTestTask, task)
   }
 }
 
@@ -155,9 +160,13 @@ const labelSpanClass = (label) => {
 </script>
 
 <template>
+  <assign-auto-test-task-modal />
+  <roll-back-modal />
+  <re-assignee-modal />
+  <new-document-modal />
   <edit-document-modal :id="editDocumentID" @close="closeEditDocument" />
   <div class="page">
-    <navigation />
+    <app-navigation />
     <header class="navbar-expand-md">
       <div class="collapse navbar-collapse" id="navbar-menu">
         <div class="navbar">
@@ -289,7 +298,7 @@ const labelSpanClass = (label) => {
                 <div class="card-body">
                   <div class="tab-content">
                     <div class="tab-pane" id="tabs-home">
-                      <div class="card" v-if="currentTab === DocTab.All">
+                      <div class="card" v-if="currentTab === etDocumentConst.DocTab.All">
                         <div class="card-header">
                           <div class="input-icon">
                             <span class="input-icon-addon">
@@ -349,8 +358,8 @@ const labelSpanClass = (label) => {
                                     <div class="badges-list">
                                       <span
                                         :class="labelSpanClass(label)"
-                                        v-for="label in doc.labels"
-                                        >{{ label }}</span
+                                        v-for="(label, index) in doc.labels"
+                                        :key="index">{{ label }}</span
                                       >
                                     </div>
                                   </td>
@@ -383,7 +392,7 @@ const labelSpanClass = (label) => {
                         </div>
 
                         <div class="card-footer d-flex align-items-center">
-                          <pagination
+                          <document-pagination
                             @go-page="goPageAll"
                             :per-count="perCount"
                             :total-page="totalPage"
@@ -392,7 +401,7 @@ const labelSpanClass = (label) => {
                       </div>
                     </div>
                     <div class="tab-pane active show" id="tabs-mine">
-                      <div class="card" v-if="currentTab === DocTab.User">
+                      <div class="card" v-if="currentTab === etDocumentConst.DocTab.User">
                         <div class="card-header">
                           <div class="input-icon">
                             <span class="input-icon-addon">
@@ -452,8 +461,8 @@ const labelSpanClass = (label) => {
                                     <div class="badges-list">
                                       <span
                                         :class="labelSpanClass(label)"
-                                        v-for="label in doc.labels"
-                                        >{{ label }}</span
+                                        v-for="(label,index) in doc.labels"
+                                        :key="index">{{ label }}</span
                                       >
                                     </div>
                                   </td>
@@ -486,7 +495,7 @@ const labelSpanClass = (label) => {
                         </div>
 
                         <div class="card-footer d-flex align-items-center">
-                          <pagination
+                          <document-pagination
                             @go-page="goPageUser"
                             :per-count="perCount"
                             :total-page="totalPage"
@@ -495,7 +504,7 @@ const labelSpanClass = (label) => {
                       </div>
                     </div>
                     <div class="tab-pane" id="tabs-task">
-                      <div class="card" v-if="currentTab === DocTab.Task">
+                      <div class="card" v-if="currentTab === etDocumentConst.DocTab.Task">
                         <div class="card-header">
                           <div class="input-icon">
                             <span class="input-icon-addon">
@@ -556,7 +565,7 @@ const labelSpanClass = (label) => {
                                     </div>
                                   </td>
                                   <td>{{ doc.task.create_by }}</td>
-                                  <!--                                  <td>{{ doc.snapshot.name}}</td>-->
+
                                   <td style="white-space: normal; max-width: 150px;">
                                     <a href="#">
                                       {{ doc.task.description }}
@@ -596,7 +605,7 @@ const labelSpanClass = (label) => {
                           </div>
                         </div>
                         <div class="card-footer d-flex align-items-center">
-                          <pagination
+                          <document-pagination
                             @go-page="goUserTask"
                             :per-count="perCount"
                             :total-page="totalPage"
