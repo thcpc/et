@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import UserLoginView from "@/views/etAdmin/UserLoginView.vue";
 import RegisterUserView from "@/views/etAdmin/RegisterUserView.vue";
 import DocumentListView from "@/views/etDocument/DocumentListView.vue";
+import EtIndex from '@/views/EtIndex.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +23,11 @@ const router = createRouter({
       path:'/register',
       name: 'registerUser',
       component: RegisterUserView,
+    },
+    {
+      path: '/index',
+      name: 'index',
+      component: EtIndex
     },
     // {
     //   path: '/about',

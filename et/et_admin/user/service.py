@@ -48,8 +48,21 @@ def login_by_name(name, password, finger_print):
                 _user.token = encode_jwt(_user.id, _user.name)
                 if finger_print and finger_print not in [p.finger_print for p in _user.finger_prints]:
                     _user.finger_prints.append(UserFingerPrint(finger_print=finger_print))
+                _session.flush()
                 return {"token": _user.token, "id": _user.id}
+
     raise InValidLoginError(code=InValidLoginError.Code, message="用户名,密码错误")
+
+
+def logout(token):
+    with DB.session(autoflush=True, autobegin=False) as session:
+        _session: Session = session
+        with _session.begin() as transaction:
+            _user = _session.query(UserBase).filter_by(token=token).first()
+            _user.token = ""
+            REDIS.remove_key(f"{REDIS.Key.TokenUser}:{_user.id}:token")
+            REDIS.remove_key(f"{REDIS.Key.TokenUser}:{_user.id}:last_active")
+            _session.flush()
 
 
 @RedisToken

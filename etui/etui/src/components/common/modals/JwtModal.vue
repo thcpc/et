@@ -4,12 +4,13 @@ import eventBus from '@/core/eventBus.js'
 import {GlobalConst } from '@/core/const/enums.js'
 import router from '@/router/index.js'
 
-import {httpPostJson, httpRetry} from '@/core/http.js'
+import { httpPostJson, httpRetry } from '@/core/http.js'
 import {fingerPrint} from "@/core/utils.js";
-import {userAuthStore} from "@/stores/tokenManager.js";
+// import {userAuthStore} from "@/stores/tokenManager.js";
 import { globalEvent } from '@/core/const/events.js'
 import { etAdminUrl } from '@/core/const/urls.js'
-const authStore = userAuthStore()
+import { userAuthStore } from '@/stores/tokenManager.js'
+// const authStore = userAuthStore()
 const code = ref(GlobalConst.UnKnown.Int)
 const canClose = ref(false)
 const password = ref('')
@@ -39,7 +40,7 @@ const goLogin = ()=>{
 const reLogin = ()=>{
   fingerPrint().then(finger=>{
     httpPostJson(etAdminUrl.login, { password: password.value, fingerPrint: finger }, (resp) => {
-      authStore.login(resp.token)
+      userAuthStore().login(resp.token)
       userOpHis.value.config.headers['Authorization'] = `Bearer ${resp.token}`
       httpRetry(userOpHis.value.config, (response) => {
         userOpHis.value.callBack(response)

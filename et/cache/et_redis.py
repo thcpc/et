@@ -64,6 +64,11 @@ class EtRedis:
             _r: Redis = r
             _r.set(f"{self.Key.TokenUser}:{user_id}:token", token, ex=ex)
 
+    def remove_key(self, key):
+        with self.r() as r:
+            _r: Redis = r
+            _r.delete(key)
+
     def get_token(self, user_id):
         with self.r() as r:
             _r: Redis = r

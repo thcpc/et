@@ -16,12 +16,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
-    let user = userAuthStore()
+    let userAuth = userAuthStore()
 
     const csrfToken = Cookies.get('csrftoken');
     // console.log(Cookies)
-    if(user.token){
-      config.headers['Authorization'] = `Bearer ${user.token}`;
+    if(userAuth.token){
+      console.log("token:" + userAuth.token)
+      config.headers['Authorization'] = `Bearer ${userAuth.token}`;
     }
     config.headers['X-CSRFToken'] = csrfToken;
     // config.headers['credentials'] = "include";

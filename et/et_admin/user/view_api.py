@@ -19,6 +19,12 @@ def login(request):
         auth_token = user_service.login_by_finger(old_token, finger_print, password)
     return Success(payload=auth_token)
 
+@require_POST
+def logout(request):
+    r = JsonRequest(request)
+    _token = r.get("token")
+    user_service.logout(_token)
+    return Success(payload="")
 
 @require_GET
 def device(request):
